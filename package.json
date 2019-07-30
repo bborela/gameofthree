@@ -1,0 +1,43 @@
+{
+  "name": "gameofthree",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/server.js",
+  "scripts": {
+    "start": "node --inspect=5858 -r ts-node/register ./src/server.ts",
+    "start:watch": "nodemon",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bborela/gameofthree.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bborela/gameofthree/issues"
+  },
+  "homepage": "https://github.com/bborela/gameofthree#readme",
+  "devDependencies": {
+    "nodemon": "^1.19.1",
+    "ts-node": "^8.3.0",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.3"
+  },
+  "dependencies": {
+    "@types/node": "^12.6.8"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "**/*.test.ts",
+      "**/*.spec.ts",
+      ".git",
+      "node_modules"
+    ],
+    "watch": [
+      "src"
+    ],
+    "exec": "npm start",
+    "ext": "ts"
+  }
+}
