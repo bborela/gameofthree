@@ -1,5 +1,5 @@
-import { GameClient } from './game-client';
+import { TerminalGameClient } from './terminal-game-client';
 
-let app = new GameClient('http://localhost:8080');
+let app = new TerminalGameClient('http://localhost:8080');
 
 export { app };
