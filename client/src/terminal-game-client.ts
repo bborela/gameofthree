@@ -6,8 +6,12 @@ export class TerminalGameClient {
     private connection: ServerConnection;
 
     constructor(url: string) {
-        this.connection = new ServerConnection(url);
+        this.connection = new ServerConnection(url, this.handleMessage);
         this.read();
+    }
+
+    private handleMessage(message: any) {
+        console.log(message.payload);
     }
 
     private read(): void {

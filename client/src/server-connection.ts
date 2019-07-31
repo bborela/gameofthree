@@ -1,13 +1,18 @@
 import io from 'socket.io-client';
 import uuid from 'uuid/v4';
 
+type MessageHandler = (message: any) => void;
+
 export class ServerConnection {
     private url: string;
     private socket: SocketIOClient.Socket;
-    private pendingMessages: { [id: string]: any } = {};
+    private pendingMessages: { [id: string]: Function } = {};
+    private onUnsourcedMessage: MessageHandler;
 
-    constructor(url: string) {
+    constructor(url: string,
+        onUnsourcedMessage: MessageHandler) {
         this.url = url;
+        this.onUnsourcedMessage = onUnsourcedMessage;
         this.sockets();
         this.listen();
     }
@@ -17,12 +22,16 @@ export class ServerConnection {
     }
     
     private onReceiveMessage(message: any) {
+        if (!message.sourceId || !(message.sourceId in this.pendingMessages)) {
+            return this.onUnsourcedMessage(message);
+        }
+
         const callback = this.pendingMessages[message.sourceId];
         delete this.pendingMessages[message.sourceId];
         callback(message);
     }
 
-    public sendServerMessage(message: string, callback: any): void {
+    public sendServerMessage(message: string, callback: MessageHandler): void {
         const envelope = { id: uuid(), payload: message };
         this.pendingMessages[envelope.id] = callback;
         this.socket.emit('message', envelope);
