@@ -23,9 +23,9 @@ export class GameServer {
     private listen(): void {
         this.io.on('connect', (socket: any) => {
             console.log('Connected client on port %s.', this.port);
-            socket.on('message', (message: any) => {
-                console.log('[server](message): %s', message.payload);
-                this.io.emit('message', { sourceId: message.id, ...message });
+            socket.on('message', (data: any) => {
+                console.log('[server](message): %s', data.payload.value);
+                this.io.emit('message', { sourceId: data.id, ...data });
             });
 
             socket.on('disconnect', () => {
