@@ -1,9 +1,9 @@
 import socketIo from 'socket.io';
 
 export class GameServer {
-    public static readonly PORT : number = 8080;
+    public static readonly PORT: number = 8080;
     
-    private io : SocketIO.Server;
+    private io: SocketIO.Server;
     private port: string | number;
 
     constructor() {
@@ -12,7 +12,7 @@ export class GameServer {
         this.listen();
     }
 
-    private configure() : void {
+    private configure(): void {
         this.port = process.env.PORT || GameServer.PORT;
     }
 
@@ -23,9 +23,9 @@ export class GameServer {
     private listen(): void {
         this.io.on('connect', (socket: any) => {
             console.log('Connected client on port %s.', this.port);
-            socket.on('message', (m: string) => {
-                console.log('[server](message): %s', m);
-                this.io.emit('message', m);
+            socket.on('message', (message: any) => {
+                console.log('[server](message): %s', message.payload);
+                this.io.emit('message', { sourceId: message.id, ...message });
             });
 
             socket.on('disconnect', () => {
