@@ -1,10 +1,10 @@
 {
-  "name": "gameofthree",
+  "name": "gameofthree-client",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/server.js",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "node --inspect=5858 -r ts-node/register ./src/server.ts",
+    "start": "node --inspect=5859 -r ts-node/register ./src/index.ts",
     "start:watch": "nodemon",
     "build": "tsc"
   },
@@ -25,19 +25,10 @@
     "typescript": "^3.5.3"
   },
   "dependencies": {
-    "@types/node": "^12.6.8"
-  },
-  "nodemonConfig": {
-    "ignore": [
-      "**/*.test.ts",
-      "**/*.spec.ts",
-      ".git",
-      "node_modules"
-    ],
-    "watch": [
-      "src"
-    ],
-    "exec": "npm start",
-    "ext": "ts"
+    "@types/node": "^12.6.8",
+    "@types/socket.io-client": "^1.4.32",
+    "@types/uuid": "^3.4.5",
+    "socket.io-client": "^2.2.0",
+    "uuid": "^3.3.2"
   }
 }
