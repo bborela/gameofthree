@@ -1,12 +1,13 @@
 import io from 'socket.io-client';
 import uuid from 'uuid/v4';
+import { Message, ReceivedMessage } from './model';
 
-type MessageHandler = (message: any) => void;
+type MessageHandler = (message: Message) => void;
 
 export class ServerConnection {
     private url: string;
     private socket: SocketIOClient.Socket;
-    private pendingMessages: { [id: string]: Function } = {};
+    private pendingMessages: { [id: string]: MessageHandler } = {};
     private onUnsourcedMessage: MessageHandler;
 
     constructor(url: string,
@@ -21,24 +22,24 @@ export class ServerConnection {
         this.socket = io.connect(this.url);
     }
     
-    private onReceiveMessage(message: any) {
-        if (!message.sourceId || !(message.sourceId in this.pendingMessages)) {
-            return this.onUnsourcedMessage(message);
+    private onReceiveMessage(receivedMessage: ReceivedMessage) {
+        if (!receivedMessage.sourceId || !(receivedMessage.sourceId in this.pendingMessages)) {
+            return this.onUnsourcedMessage(receivedMessage.payload);
         }
 
-        const callback = this.pendingMessages[message.sourceId];
-        delete this.pendingMessages[message.sourceId];
-        callback(message);
+        const callback = this.pendingMessages[receivedMessage.sourceId];
+        delete this.pendingMessages[receivedMessage.sourceId];
+        callback(receivedMessage.payload);
     }
 
-    public sendServerMessage(message: string, callback: MessageHandler): void {
+    public sendServerMessage(message: Message, callback: MessageHandler): void {
         const envelope = { id: uuid(), payload: message };
         this.pendingMessages[envelope.id] = callback;
         this.socket.emit('message', envelope);
     }
 
     private listen(): void {
-        this.socket.on('message', (message: any) => {
+        this.socket.on('message', (message: ReceivedMessage) => {
             this.onReceiveMessage(message);
         });
     }
