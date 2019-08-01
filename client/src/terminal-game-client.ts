@@ -1,19 +1,28 @@
-import { ServerConnection } from './server-connection';
 import readline from 'readline';
-import { Message } from './model';
+import { BaseGameClient } from './base-game-client';
 
-export class TerminalGameClient {
+export class TerminalGameClient extends BaseGameClient {
     private readline: readline.Interface;
-    private connection: ServerConnection;
 
     constructor(url: string) {
-        this.connection = new ServerConnection(url, this.handleMessage);
+        super(url);
         this.read();
     }
 
-    private handleMessage(message: any) {
-        console.log(message.value);
+    onChat(message: any): void {
     }
+    onError(errorMessage: string): void {
+    }
+    onOpponentMove(movedBy: number, result: number): void {
+    }
+    onFinish(haveIWon: boolean): void {
+    }
+    onOpponentQuit(): void {
+    }
+    onStart(score: number, turn: number): void {
+        const turnMsg = turn == this.player.position ? 'Your' : 'Opponent\'s';
+        console.log(`Game started. Number: ${score}. Player ${turnMsg}'s turn.`);
+    }    
 
     private read(): void {
         this.initReadline();
@@ -23,22 +32,31 @@ export class TerminalGameClient {
         });
     }
 
-    private processCommand(input: string) {
+    private processCommand(input: string): void {
         const cmd = input.split(' ')[0];
+        const cmdValue = input.substring(input.indexOf(' ') + 1);
         switch (cmd) {
             case '/quit':
                 process.exit(0);
                 break;
             case '/say':
-                const msg = { type: 'chat', value: input.substring(input.indexOf(' ') + 1) };
-                this.connection.sendServerMessage(msg, (message: Message) => {
-                    console.log(message.value);
-                });
+                this.say(cmdValue);
+                break;
+            case '/play':
+                if (this.isValidMove(cmdValue)) {
+                    return this.move(+cmdValue);
+                }
+                console.log('Invalid move.');
                 break;
             default:
                 console.log('Unknown command.');
                 break;
         }
+    }
+
+    private isValidMove(input: string): boolean {
+        const value = +input;
+        return value == -1 || value == 0 || value == 1;
     }
 
     private initReadline(): void {

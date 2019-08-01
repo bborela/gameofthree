@@ -1,19 +1,18 @@
 import io from 'socket.io-client';
 import uuid from 'uuid/v4';
-import { Message, ReceivedMessage } from './model';
 
-type MessageHandler = (message: Message) => void;
+type MessageHandler = (message: any) => void;
 
 export class ServerConnection {
     private url: string;
     private socket: SocketIOClient.Socket;
     private pendingMessages: { [id: string]: MessageHandler } = {};
-    private onUnsourcedMessage: MessageHandler;
+    private onIncomingMessage: MessageHandler;
 
     constructor(url: string,
-        onUnsourcedMessage: MessageHandler) {
+        onIncomingMessage: MessageHandler) {
         this.url = url;
-        this.onUnsourcedMessage = onUnsourcedMessage;
+        this.onIncomingMessage = onIncomingMessage;
         this.sockets();
         this.listen();
     }
@@ -22,9 +21,9 @@ export class ServerConnection {
         this.socket = io.connect(this.url);
     }
     
-    private onReceiveMessage(receivedMessage: ReceivedMessage) {
+    private onReceiveMessage(receivedMessage: any) {
         if (!receivedMessage.sourceId || !(receivedMessage.sourceId in this.pendingMessages)) {
-            return this.onUnsourcedMessage(receivedMessage.payload);
+            return this.onIncomingMessage(receivedMessage.payload);
         }
 
         const callback = this.pendingMessages[receivedMessage.sourceId];
@@ -32,15 +31,18 @@ export class ServerConnection {
         callback(receivedMessage.payload);
     }
 
-    public sendServerMessage(message: Message, callback: MessageHandler): void {
+    public sendServerMessage(message: any, callback: MessageHandler = () => {}): void {
         const envelope = { id: uuid(), payload: message };
         this.pendingMessages[envelope.id] = callback;
         this.socket.emit('message', envelope);
     }
 
     private listen(): void {
-        this.socket.on('message', (message: ReceivedMessage) => {
+        this.socket.on('message', (message: any, ackFn: any) => {
             this.onReceiveMessage(message);
+            if (ackFn) {
+                ackFn('OK');
+            }
         });
     }
 }
