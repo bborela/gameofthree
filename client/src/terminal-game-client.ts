@@ -1,16 +1,21 @@
 import { BaseGameClient } from './base-game-client';
 import { ServerConnection } from './server-connection';
 import { CommandProcessor } from './command-processor';
+import { AutoPlayer } from './auto-player';
 
 export class TerminalGameClient extends BaseGameClient {
     private readonly myLabel: string = 'Your';
     private readonly opponentLabel: string = 'Opponent\'s';
 
     private readonly processor: CommandProcessor;
+    private readonly autoPlayer: AutoPlayer;
 
-    constructor(connection: ServerConnection, processor: CommandProcessor) {
+    constructor(connection: ServerConnection,
+        processor: CommandProcessor,
+        autoPlayer: AutoPlayer) {
         super(connection);
         this.processor = processor;
+        this.autoPlayer = autoPlayer;
         this.attachEvents();
     }
 
@@ -30,18 +35,15 @@ export class TerminalGameClient extends BaseGameClient {
     onMove(isMyMove: boolean, movedBy: number, result: number, isFinished: boolean): void {
         const mover = isMyMove ? this.myLabel : this.opponentLabel;
         const additionalMsg = !isFinished
-            ? `${!isMyMove ? this.myLabel : this.opponentLabel} turn`
+            ? `${!isMyMove ? this.myLabel : this.opponentLabel} turn.`
             : isMyMove
                 ? 'You win!'
                 : 'You lose!';
         console.log(`${mover} move: ${movedBy}. Result: ${result}. ${additionalMsg}`);
-    }
 
-    onFinish(haveIWon: boolean): void {
-        if (haveIWon) {
-            return console.log('You win!');
+        if (!isFinished) {
+            this.autoPlayer.play(result);
         }
-        console.log('You lose!');
     }
 
     onOpponentQuit(): void {
@@ -49,8 +51,11 @@ export class TerminalGameClient extends BaseGameClient {
     }
 
     onStart(score: number, startingPlayerId: string): void {
-        const turnMsg = startingPlayerId == this.playerId ? this.myLabel : this.opponentLabel;
+        const isMyTurn = startingPlayerId == this.playerId;
+        const turnMsg = isMyTurn ? this.myLabel : this.opponentLabel;
         console.log(`Game started. Number: ${score}. ${turnMsg} turn.`);
+        
+        this.autoPlayer.play(score);
     }
 
     onQuit() {
@@ -62,20 +67,33 @@ export class TerminalGameClient extends BaseGameClient {
     }
 
     onPlay(move: string) {
-        if (this.isValidMove(move)) {
-            return this.move(+move);
+        if (this.autoPlayer.isOn()) {
+            console.log('Auto-play is on. Please switch it off to play.');
+            return;
         }
+
+        const parsedValue = this.parseMove(move);
+        if (parsedValue != null)
+            this.move(parsedValue);
     }
-    
+
     private attachEvents() {
         this.processor.on('quit', () => { this.onQuit(); });
         this.processor.on('say', (text) => { this.onSay(text); });
         this.processor.on('play', (move) => { this.onPlay(move); });
-        this.processor.on('unknownCmd', () => { console.log('Unknown command.'); })        
+        this.processor.on('unknownCmd', () => { console.log('Unknown command.'); })
+        this.processor.on('auto', () => { this.autoPlayer.switch(); });
+
+        this.autoPlayer.on('play', (value) => { this.move(value); })
     }
 
-    private isValidMove(input: string): boolean {
-        const value = +input;
-        return value == -1 || value == 0 || value == 1;
+    private parseMove(input: string): number {
+        return input == '-'
+            ? -1
+            : input == '0'
+                ? 0
+                : input == '+'
+                    ? 1
+                    : null;
     }
 }

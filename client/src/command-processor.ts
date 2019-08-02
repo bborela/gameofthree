@@ -32,6 +32,9 @@ export class CommandProcessor extends EventEmitter {
             case '/play':
                 this.emit('play', cmdValue);
                 break;
+            case '/auto':
+                this.emit('auto');
+                break;
             default:
                 this.emit('unknownCmd', cmdValue);
                 break;
