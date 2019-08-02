@@ -1,0 +1,13 @@
+{
+    "programHeader": "Bruno Borela's Game of Three (C) 2019",
+    "unknownCommand": "Unknown command.",
+    "gameStarted": "Game started",
+    "gameOver": "Game is over.",
+    "shutdown": "Shutting down server...",
+    "moving": "Moving",
+    "listening": "Server listening on port %s",
+    "connectAttempt": "Client attempted to connect to game.",
+    "connected": "Client connected",
+    "disconnected": "Player disconnected",
+    "identified": "Player identified."
+}

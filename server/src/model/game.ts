@@ -1,7 +1,7 @@
 import uuid from 'uuid/v4';
 import { Player } from './player';
-import { Utils } from '../utils';
-import { Randomizer } from '../randomizer';
+import { Utils } from '../lib/utils';
+import { Randomizer } from '../lib/randomizer';
 
 export class Game {
     private static readonly LOWEST_NUMBER: number = 50;

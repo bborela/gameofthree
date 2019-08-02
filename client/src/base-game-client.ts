@@ -1,4 +1,4 @@
-import { ServerConnection } from './server-connection';
+import { ServerConnection } from './lib/server-connection';
 import { MessageTypes } from './message-types';
 
 export abstract class BaseGameClient {
@@ -13,12 +13,12 @@ export abstract class BaseGameClient {
         connection.on('disconnect', () => {  this.onDisconnect() });
     }
 
-    abstract onChat(message: any) : void;
-    abstract onError(errorMessage: string) : void;
-    abstract onMove(isMyMove: boolean, movedBy: number, result: number, isFinished: boolean) : void;
-    abstract onOpponentQuit() : void;
-    abstract onStart(score: number, startingPlayerId: string) : void;
-    abstract onDisconnect() : void;
+    abstract onChat(message: any): void;
+    abstract onMove(isMyMove: boolean, movedBy: number, result: number, isFinished: boolean): void;
+    abstract onOpponentQuit(): void;
+    abstract onStart(score: number, startingPlayerId: string): void;
+    abstract onConnected(): void;
+    abstract onDisconnect(): void;
 
     private onIncomingMessage(message: any) {
         this.updateState(message);
@@ -26,14 +26,12 @@ export abstract class BaseGameClient {
         switch (message.type) {
             case MessageTypes.ID:
                 this.playerId = message.value;
-                break;
+                return this.onConnected();
             case MessageTypes.START:
                 const { score, startingPlayerId } = message.value;
                 return this.onStart(score, startingPlayerId);
             case MessageTypes.CHAT:
                 return this.onChat(message);
-            case MessageTypes.ERROR:
-                return this.onError(message.value);
             case MessageTypes.MOVE:
                 const { movedBy, playerId, result, isFinished } = message.value;
                 const isMyMove = playerId == this.playerId;

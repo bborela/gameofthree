@@ -18,12 +18,9 @@ export class AutoPlayer extends EventEmitter {
             return;
         }
 
-        const fire = () => this.emit('play', AutoPlayerCalculator.calculate(score));
-        if (this.delay) {
-            this.delayedPlay = setTimeout(fire, +this.delay);
-            return;
-        }
-        fire();
+        this.delayedPlay = setTimeout(
+            () => this.emit('play', AutoPlayerCalculator.calculate(score)),
+            +this.delay);
     }
 
     switch() {
@@ -36,6 +33,6 @@ export class AutoPlayer extends EventEmitter {
     }
 
     private configure(delay: string): void {
-        this.delay = delay != null ? delay : AutoPlayer.AUTOPLAY_DELAY;
+        this.delay = delay || AutoPlayer.AUTOPLAY_DELAY;
     }
 }

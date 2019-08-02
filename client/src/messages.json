@@ -1,0 +1,13 @@
+{
+    "win": "You win!",
+    "lose": "You lose! :(",
+    "opponentQuit": "Your opponent gave up. Waiting for another player.",
+    "programHeader": "Bruno Borela's Game of Three (C) 2019",
+    "connected": "Connected to server.",
+    "unknownCommand": "Unknown command.",
+    "switchAutoplay": "Auto-play is on. Please switch it off to play.",
+    "serverDisconnected": "Server disconnected.",
+    "gameStarted": "Game started",
+    "me": "Your",
+    "opponent": "Opponent's"
+}

@@ -1,10 +1,11 @@
 import socketIo from 'socket.io';
 import { StartMessage, Message, MoveMessage, IdMessage, PlayerQuitMessage } from './model';
 import uuid from 'uuid/v4';
-import { Logger } from './logger';
-import { CommandProcessor } from './command-processor';
+import { Logger } from './lib/logger';
+import { CommandProcessor } from './lib/command-processor';
 import { GameController } from './game-controller';
 import { MessageHandler } from './message-handler';
+const messages = require('./messages.json');
 
 export class GameServer {
     public static readonly PORT: number = 8080;
@@ -26,15 +27,20 @@ export class GameServer {
         this.logger = logger;
         this.processor = processor;
 
+        this.printHeader();
         this.attachEvents();
         this.configure();
         this.sockets();
         this.listen();
     }
 
+    private printHeader(): void {
+        this.logger.log(messages.programHeader);
+    }
+
     private attachEvents(): void {
         this.processor.on('quit', () => { this.onQuit(); });
-        this.processor.on('unknownCmd', () => { this.logger.log('Unknown command.'); })
+        this.processor.on('unknownCmd', () => this.logger.log(messages.unknownCommand));
 
         this.controller.on('start', (data) => { this.onStart(data); });
         this.controller.on('move', (data) => { this.onMoved(data); });
@@ -53,12 +59,12 @@ export class GameServer {
     }
 
     private onFinish(): void {
-        this.logger.log('Game is over.');
+        this.logger.log(messages.gameOver);
         this.controller.tryStart();
     }
 
     private onQuit(): void {
-        this.logger.log('Shutting down server...');
+        this.logger.log(messages.shutdown);
         process.exit(0);
     }
 
@@ -67,7 +73,7 @@ export class GameServer {
             data.score,
             data.startingPlayerId);
         this.broadcast(message);
-        this.logger.log('Game started');
+        this.logger.log(messages.gameStarted);
     }
 
     private broadcast(message: Message): void {
@@ -81,7 +87,7 @@ export class GameServer {
             data.score,
             data.isFinished);
         this.broadcast(message);
-        this.logger.log('Moving');
+        this.logger.log(messages.moving);
     }
 
     private onChat(message: any): void {
@@ -97,34 +103,33 @@ export class GameServer {
             this.connectSocket(socket);
         });
 
-        this.logger.log('Server listening on port %s', this.port);
+        this.logger.log(messages.listening, this.port);
     }
 
     private connectSocket(socket: SocketIO.Socket) {
         if (this.controller.isGameFull()) {
             socket.disconnect(true);
-            this.logger.log('Client attempted to connect to game.');
+            this.logger.log(messages.connectAttempt);
             return;
         }
 
-        this.logger.log('Client connected');
+        this.logger.log(messages.connected);
 
         const playerId = uuid();
         this.controller.enterPlayer(playerId);
         socket.emit('message', new IdMessage(playerId), (_ackData: any) => {
-            this.logger.log(`Player identified. (id=${playerId})`);
+            this.logger.log(`${messages.identified} (id=${playerId})`);
             this.controller.tryStart();
         });
 
         socket.on('message', (data: any) => {
-            // TODO: validate message
             this.logger.log('[server](message): %s', JSON.stringify({ playerId, ...data }));
             this.msgHandler.handleMessage(data, playerId);
         });
 
         socket.on('disconnect', () => {
             this.controller.removePlayer(playerId);
-            this.logger.log('Player disconnected');
+            this.logger.log(messages.disconnected);
             this.broadcast(new PlayerQuitMessage());
         });
     }
