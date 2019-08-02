@@ -4,8 +4,8 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "start": "node --inspect=5859 -r ts-node/register ./src/index.ts",
-    "start:noinspect": "node -r ts-node/register ./src/index.ts",
+    "start": "node -r ts-node/register ./src/index.ts",
+    "debug": "node --inspect=5859 -r ts-node/register ./src/index.ts",
     "start:watch": "nodemon",
     "build": "tsc"
   },

@@ -1,9 +1,7 @@
 export class Player {
     readonly id: string;
-    readonly position: number;
 
-    constructor(id: string, position: number) {
+    constructor(id: string) {
         this.id = id;
-        this.position = position;
     }
 }

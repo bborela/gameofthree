@@ -1,6 +1,8 @@
 import socketIo from 'socket.io';
-import { Game, StartMessage, Message, FinishMessage, MoveMessage, Player, IdMessage } from './model';
+import { Game, StartMessage, Message, MoveMessage, Player, IdMessage, PlayerQuitMessage } from './model';
 import uuid from 'uuid/v4';
+import { Logger } from './logger';
+import readline from 'readline';
 
 export class GameServer {
     public static readonly PORT: number = 8080;
@@ -8,12 +10,45 @@ export class GameServer {
     private io: SocketIO.Server;
     private port: string | number;
     private game: Game;
+    private logger: Logger;
+    private readline: readline.Interface;
 
-    constructor(game: Game) {
+    constructor(game: Game, logger: Logger) {
         this.game = game;
+        this.logger = logger;
         this.configure();
         this.sockets();
         this.listen();
+        this.read();
+    }
+
+    private read(): void {
+        this.initReadline();
+        
+        this.readline.on('line', (input) => {
+            this.processCommand(input);
+        });
+    }
+
+    private initReadline(): void {
+        this.readline = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
+    }
+
+    private processCommand(input: string): void {
+        const cmd = input.split(' ')[0];
+        switch (cmd) {
+            case '/q':
+            case '/quit':
+                this.logger.log('Shutting down server...');
+                process.exit(0);
+                break;
+            default:
+                this.logger.log('Unknown command.');
+                break;
+        }
     }
 
     private configure(): void {
@@ -28,47 +63,58 @@ export class GameServer {
         this.game.start();
         var message = new StartMessage(this.game.getState(),
             this.game.getScore(),
-            this.game.getCurrentPlayer());
+            this.game.getCurrentPlayer().id);
         this.broadcast(message);
-        console.log('Game started');
+        this.logger.log('Game started');
     }
 
     private broadcast(message: Message): void {
         this.io.emit('message', message);
     }
 
-    private tryMove(state: string, value: number): void {
-        if (!this.game.isValidState(state)) {
-            return;
+    private isPlayerTurn(playerId: string): boolean {
+        const playing = this.game.getCurrentPlayer();
+        return playing.id == playerId;
+    }
+
+    private tryMove(playerId: string, state: string, value: number): boolean {
+        if (!this.game.isFull()
+            || this.game.isOver()
+            || !this.isPlayerTurn(playerId)
+            || !this.game.isValidState(state)) {
+            return false;
         }
-        
+
         const movingPlayer = this.game.getCurrentPlayer();
         this.game.move(value);
         this.broadcastMove(movingPlayer, value);
+
         if (this.game.isOver()) {
-            this.finish(movingPlayer);
+            this.logger.log('Game is over.');
+            this.start();
         }
+
+        return true;
     }
 
     private broadcastMove(movingPlayer: Player, value: number) : void {
-        const message = new MoveMessage(movingPlayer, this.game.getState(), value, this.game.getScore());
+        const message = new MoveMessage(movingPlayer.id,
+            this.game.getState(),
+            value,
+            this.game.getScore(),
+            this.game.isOver());
         this.broadcast(message);
-        console.log('Moving');
+        this.logger.log('Moving');
     }
 
-    private finish(winner: Player): void {
-        const message = new FinishMessage(winner.id);
-        this.broadcast(message);
-        console.log('Game is over.');
-    }
-
-    private processMessage(message: any): void {
-        switch (message.type) {
+    private processMessage(message: any, playerId: string): void {
+        const payload = message.payload;
+        switch (payload.type) {
             case 'chat':
-                this.broadcast({ ...message, sourceId: message.id });
+                this.broadcast(message);
                 break;
             case 'move':
-                this.tryMove(message.state, message.value);
+                this.tryMove(playerId, payload.state, payload.value);
                 break;
             default:
                 // drop invalid message
@@ -80,16 +126,16 @@ export class GameServer {
         this.io.on('connect', (socket: SocketIO.Socket) => {
             if (this.game.isFull()) {
                 socket.disconnect(true);
-                console.log('Client attempted to connect to game.');
+                this.logger.log('Client attempted to connect to game.');
                 return;
             }
 
-            console.log('Client connected');
+            this.logger.log('Client connected');
 
             const playerId = uuid();
             this.game.enterPlayer(playerId);
             socket.emit('message', new IdMessage(playerId), (_ackData: any) => {
-                console.log(`Player identified. (${playerId})`);
+                this.logger.log(`Player identified. (${playerId})`);
 
                 if (this.game.isFull()) {
                     this.start();
@@ -98,13 +144,17 @@ export class GameServer {
 
             socket.on('message', (data: any) => {
                 // TODO: validate message
-                console.log('[server](message): %s', JSON.stringify(data));
-                this.processMessage(data);
+                this.logger.log('[server](message): %s', JSON.stringify({ playerId, ...data }));
+                this.processMessage(data, playerId);
             });
 
             socket.on('disconnect', () => {
-                console.log('Player disconnected');
+                this.game.removePlayer(playerId);
+                this.logger.log('Player disconnected');
+                this.broadcast(new PlayerQuitMessage());
             });
         });
+
+        this.logger.log('Server listening on port %s', this.port);
     }
 }

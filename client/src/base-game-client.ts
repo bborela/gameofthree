@@ -1,38 +1,43 @@
 import { ServerConnection } from './server-connection';
-import { Player } from './model/player';
 
 export abstract class BaseGameClient {
     private connection: ServerConnection;
     private state: string;
     
-    protected player: Player;
+    protected playerId: string;
 
-    constructor(url: string) {
-        this.connection = new ServerConnection(url, (message) => { this.handleIncomingMessage(message) });
+    constructor(connection: ServerConnection) {
+        this.connection = connection;
+        connection.on('incoming', (message: any) => { this.handleIncomingMessage(message) });
+        connection.on('disconnect', () => {  this.onDisconnect() });
     }
+
+    abstract onChat(message: any) : void;
+    abstract onError(errorMessage: string) : void;
+    abstract onMove(isMyMove: boolean, movedBy: number, result: number, isFinished: boolean) : void;
+    abstract onOpponentQuit() : void;
+    abstract onStart(score: number, startingPlayerId: string) : void;
+    abstract onDisconnect() : void;
 
     private handleIncomingMessage(message: any) {
         this.updateState(message);
 
         switch (message.type) {
             case 'id':
-                this.player = message.value;
+                this.playerId = message.value;
                 break;
             case 'start':
-                const { score, turn } = message.value;
-                return this.onStart(score, turn);
+                const { score, startingPlayerId } = message.value;
+                return this.onStart(score, startingPlayerId);
             case 'chat':
                 return this.onChat(message);
             case 'error':
                 return this.onError(message.value);
             case 'move':
-                const { movedBy, player, result } = message.value;
-                if (player.id != this.player.id) {
-                    return this.onOpponentMove(movedBy, result);
-                }
-            case 'finish':
-                return this.onFinish(message.value == this.player.id);
-            case 'opponentQuit':
+                const { movedBy, playerId, result, isFinished } = message.value;
+                const isMyMove = playerId == this.playerId;
+                return this.onMove(isMyMove, movedBy, result, isFinished);
+            case 'quit':
                 return this.onOpponentQuit();
         }
     }
@@ -50,11 +55,4 @@ export abstract class BaseGameClient {
     public move(value: number) {
         this.connection.sendServerMessage({ type: 'move', value, state: this.state });
     }
-
-    abstract onChat(message: any) : void;
-    abstract onError(errorMessage: string) : void;
-    abstract onOpponentMove(movedBy: number, result: number) : void;
-    abstract onFinish(haveIWon: boolean) : void;
-    abstract onOpponentQuit() : void;
-    abstract onStart(score: number, turn: number) : void;
 }

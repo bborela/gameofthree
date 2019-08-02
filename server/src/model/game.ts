@@ -4,8 +4,9 @@ import { Utils } from '../utils';
 import { Randomizer } from '../randomizer';
 
 export class Game {
-    private lowestNumber: number = 50;
-    private highestNumber: number = 100;
+    private static readonly LOWEST_NUMBER: number = 50;
+    private static readonly HIGHEST_NUMBER : number = 100;
+    private static readonly MAX_PLAYERS: number = 2;
 
     private randomizer: Randomizer;
     private players: Player[] = [];
@@ -18,14 +19,18 @@ export class Game {
     }
 
     public start(): void {
-        this.score = this.randomizer.random(this.lowestNumber, this.highestNumber);
-        this.turn = this.randomizer.random(0, 1);
+        this.score = this.randomizer.random(Game.LOWEST_NUMBER, Game.HIGHEST_NUMBER);
+        this.turn = this.randomizer.random(0, Game.MAX_PLAYERS - 1);
         this.updateState();
     }
 
     public move(moveBy: number): number {
         if (this.isOver()) {
-            throw new Error('Game is over.');
+            throw new Error('Invalid operation: game is over.');
+        }
+
+        if (!this.isFull()) {
+            return this.score;
         }
 
         this.score += moveBy;
@@ -39,17 +44,21 @@ export class Game {
         return this.score;
     }
 
+    public removePlayer(id: string) {
+        this.players = this.players.filter((item) => item.id != id);
+    }
+
     public isFull(): boolean {
-        return this.players.length == 2;
+        return this.players.length == Game.MAX_PLAYERS;
     }
 
     public enterPlayer(id: string): void {
         if (this.isFull()) return;
-        this.players.push(new Player(id, this.players.length + 1));
+        this.players.push(new Player(id));
     }
 
     public isOver(): boolean {
-        return this.score == 1;
+        return this.score <= 1;
     }
 
     public getCurrentPlayer(): Player {
@@ -69,7 +78,8 @@ export class Game {
     }
 
     private switchTurn(): void {
-        this.turn = ~this.turn;
+        ++this.turn;
+        this.turn %= this.players.length;
     }
 
     private updateState(): void {

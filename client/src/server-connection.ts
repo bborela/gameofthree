@@ -1,18 +1,13 @@
 import io from 'socket.io-client';
-import uuid from 'uuid/v4';
+import { EventEmitter } from 'events';
 
-type MessageHandler = (message: any) => void;
-
-export class ServerConnection {
+export class ServerConnection extends EventEmitter {
     private url: string;
     private socket: SocketIOClient.Socket;
-    private pendingMessages: { [id: string]: MessageHandler } = {};
-    private onIncomingMessage: MessageHandler;
 
-    constructor(url: string,
-        onIncomingMessage: MessageHandler) {
+    constructor(url: string) {
+        super();
         this.url = url;
-        this.onIncomingMessage = onIncomingMessage;
         this.sockets();
         this.listen();
     }
@@ -22,18 +17,11 @@ export class ServerConnection {
     }
     
     private onReceiveMessage(receivedMessage: any) {
-        if (!receivedMessage.sourceId || !(receivedMessage.sourceId in this.pendingMessages)) {
-            return this.onIncomingMessage(receivedMessage.payload);
-        }
-
-        const callback = this.pendingMessages[receivedMessage.sourceId];
-        delete this.pendingMessages[receivedMessage.sourceId];
-        callback(receivedMessage.payload);
+        this.emit('incoming', receivedMessage.payload);
     }
 
-    public sendServerMessage(message: any, callback: MessageHandler = () => {}): void {
-        const envelope = { id: uuid(), payload: message };
-        this.pendingMessages[envelope.id] = callback;
+    public sendServerMessage(message: any): void {
+        const envelope = { payload: message };
         this.socket.emit('message', envelope);
     }
 
@@ -44,5 +32,9 @@ export class ServerConnection {
                 ackFn('OK');
             }
         });
+
+        this.socket.on('disconnect', () => {
+            this.emit('disconnect');
+        })
     }
 }

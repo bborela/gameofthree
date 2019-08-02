@@ -4,6 +4,9 @@ import { Randomizer } from './randomizer';
 
 const randomizer = new Randomizer();
 const game = new Game(randomizer);
-const app = new GameServer(game);
+const logger = {
+    log: (message: any, args?: any[]) => args ? console.log(message, args) : console.log(message)
+};
+const app = new GameServer(game, logger);
 
 export { app };

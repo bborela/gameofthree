@@ -1,27 +1,55 @@
 import readline from 'readline';
 import { BaseGameClient } from './base-game-client';
+import { ServerConnection } from './server-connection';
 
 export class TerminalGameClient extends BaseGameClient {
+    private myLabel: string = 'Your';
+    private opponentLabel: string = 'Opponent\'s';
+
     private readline: readline.Interface;
 
-    constructor(url: string) {
-        super(url);
+    constructor(connection: ServerConnection) {
+        super(connection);
         this.read();
     }
 
+    onDisconnect(): void {
+        console.log('Server disconnected');
+        process.exit(0);
+    }
+
     onChat(message: any): void {
+        console.log(`> ${message.value}`);
     }
+
     onError(errorMessage: string): void {
+        console.log(`Unexpected server error: ${errorMessage}`);
     }
-    onOpponentMove(movedBy: number, result: number): void {
+
+    onMove(isMyMove: boolean, movedBy: number, result: number, isFinished: boolean): void {
+        const mover = isMyMove ? this.myLabel : this.opponentLabel;
+        const additionalMsg = !isFinished
+            ? `${!isMyMove ? this.myLabel : this.opponentLabel} turn`
+            : isMyMove
+                ? 'You win!'
+                : 'You lose!';
+        console.log(`${mover} move: ${movedBy}. Result: ${result}. ${additionalMsg}`);
     }
+
     onFinish(haveIWon: boolean): void {
+        if (haveIWon) {
+            return console.log('You win!');
+        }
+        console.log('You lose!');
     }
+
     onOpponentQuit(): void {
+        console.log('Your opponent gave up. Waiting for another player.');
     }
-    onStart(score: number, turn: number): void {
-        const turnMsg = turn == this.player.position ? 'Your' : 'Opponent\'s';
-        console.log(`Game started. Number: ${score}. Player ${turnMsg}'s turn.`);
+
+    onStart(score: number, startingPlayerId: string): void {
+        const turnMsg = startingPlayerId == this.playerId ? this.myLabel : this.opponentLabel;
+        console.log(`Game started. Number: ${score}. ${turnMsg} turn.`);
     }    
 
     private read(): void {
@@ -36,12 +64,15 @@ export class TerminalGameClient extends BaseGameClient {
         const cmd = input.split(' ')[0];
         const cmdValue = input.substring(input.indexOf(' ') + 1);
         switch (cmd) {
+            case '/q':
             case '/quit':
                 process.exit(0);
                 break;
+            case '/s':
             case '/say':
                 this.say(cmdValue);
                 break;
+            case '/p':
             case '/play':
                 if (this.isValidMove(cmdValue)) {
                     return this.move(+cmdValue);
