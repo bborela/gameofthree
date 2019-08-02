@@ -8,7 +8,7 @@ export abstract class BaseGameClient {
 
     constructor(connection: ServerConnection) {
         this.connection = connection;
-        connection.on('incoming', (message: any) => { this.handleIncomingMessage(message) });
+        connection.on('incoming', (message: any) => { this.onIncomingMessage(message) });
         connection.on('disconnect', () => {  this.onDisconnect() });
     }
 
@@ -19,7 +19,7 @@ export abstract class BaseGameClient {
     abstract onStart(score: number, startingPlayerId: string) : void;
     abstract onDisconnect() : void;
 
-    private handleIncomingMessage(message: any) {
+    private onIncomingMessage(message: any) {
         this.updateState(message);
 
         switch (message.type) {

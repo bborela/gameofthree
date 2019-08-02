@@ -14,8 +14,28 @@ export class CommandProcessor extends EventEmitter {
         this.readline.on('line', (input) => {
             const cmd = input.split(' ')[0];
             const cmdValue = input.substring(input.indexOf(' ') + 1);    
-            this.emit('cmd', cmd, cmdValue);
+            this.processCommand(cmd, cmdValue);
         });
+    }
+
+    private processCommand(cmd: string, cmdValue: string): void {
+        switch (cmd) {
+            case '/q':
+            case '/quit':
+                this.emit('quit');
+                break;
+            case '/s':
+            case '/say':
+                this.emit('say', cmdValue);
+                break;
+            case '/p':
+            case '/play':
+                this.emit('play', cmdValue);
+                break;
+            default:
+                this.emit('unknownCmd', cmdValue);
+                break;
+        }
     }
 
     private initReadline(): void {

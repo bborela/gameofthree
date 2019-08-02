@@ -11,7 +11,7 @@ export class TerminalGameClient extends BaseGameClient {
     constructor(connection: ServerConnection, processor: CommandProcessor) {
         super(connection);
         this.processor = processor;
-        this.processor.on('cmd', (cmd, cmdValue) => { this.processCommand(cmd, cmdValue) });
+        this.attachEvents();
     }
 
     onDisconnect(): void {
@@ -51,29 +51,27 @@ export class TerminalGameClient extends BaseGameClient {
     onStart(score: number, startingPlayerId: string): void {
         const turnMsg = startingPlayerId == this.playerId ? this.myLabel : this.opponentLabel;
         console.log(`Game started. Number: ${score}. ${turnMsg} turn.`);
-    }    
+    }
 
-    private processCommand(cmd: string, cmdValue: string): void {
-        switch (cmd) {
-            case '/q':
-            case '/quit':
-                process.exit(0);
-                break;
-            case '/s':
-            case '/say':
-                this.say(cmdValue);
-                break;
-            case '/p':
-            case '/play':
-                if (this.isValidMove(cmdValue)) {
-                    return this.move(+cmdValue);
-                }
-                console.log('Invalid move.');
-                break;
-            default:
-                console.log('Unknown command.');
-                break;
+    onQuit() {
+        process.exit(0);
+    }
+
+    onSay(text: string) {
+        this.say(text);
+    }
+
+    onPlay(move: string) {
+        if (this.isValidMove(move)) {
+            return this.move(+move);
         }
+    }
+    
+    private attachEvents() {
+        this.processor.on('quit', () => { this.onQuit(); });
+        this.processor.on('say', (text) => { this.onSay(text); });
+        this.processor.on('play', (move) => { this.onPlay(move); });
+        this.processor.on('unknownCmd', () => { console.log('Unknown command.'); })        
     }
 
     private isValidMove(input: string): boolean {

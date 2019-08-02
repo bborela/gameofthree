@@ -84,5 +84,5 @@ export class Game {
 
     private updateState(): void {
         this.state = uuid();
-    }    
+    }
 }
