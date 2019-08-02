@@ -21,7 +21,7 @@ export class GameController extends EventEmitter {
     }
 
     public tryStart(): boolean {
-        if (this.game.isFull()) {
+        if (!this.game.isFull()) {
             return false;
         }
 
