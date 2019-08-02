@@ -16,7 +16,7 @@ export class GameController extends EventEmitter {
         this.game.enterPlayer(playerId);
     }
 
-    public isFull(): boolean {
+    public isGameFull(): boolean {
         return this.game.isFull();
     }
 

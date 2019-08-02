@@ -1,4 +1,5 @@
 import { ServerConnection } from './server-connection';
+import { MessageTypes } from './message-types';
 
 export abstract class BaseGameClient {
     private connection: ServerConnection;
@@ -23,21 +24,21 @@ export abstract class BaseGameClient {
         this.updateState(message);
 
         switch (message.type) {
-            case 'id':
+            case MessageTypes.ID:
                 this.playerId = message.value;
                 break;
-            case 'start':
+            case MessageTypes.START:
                 const { score, startingPlayerId } = message.value;
                 return this.onStart(score, startingPlayerId);
-            case 'chat':
+            case MessageTypes.CHAT:
                 return this.onChat(message);
-            case 'error':
+            case MessageTypes.ERROR:
                 return this.onError(message.value);
-            case 'move':
+            case MessageTypes.MOVE:
                 const { movedBy, playerId, result, isFinished } = message.value;
                 const isMyMove = playerId == this.playerId;
                 return this.onMove(isMyMove, movedBy, result, isFinished);
-            case 'quit':
+            case MessageTypes.QUIT:
                 return this.onOpponentQuit();
         }
     }
@@ -49,10 +50,10 @@ export abstract class BaseGameClient {
     }
 
     public say(text: string) {
-        this.connection.sendServerMessage({ type: 'chat', value: text });
+        this.connection.sendServerMessage({ type: MessageTypes.CHAT, value: text });
     }
 
     public move(value: number) {
-        this.connection.sendServerMessage({ type: 'move', value, state: this.state });
+        this.connection.sendServerMessage({ type: MessageTypes.MOVE, value, state: this.state });
     }
 }
