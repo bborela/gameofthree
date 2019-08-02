@@ -2,43 +2,29 @@ import socketIo from 'socket.io';
 import { Game, StartMessage, Message, MoveMessage, Player, IdMessage, PlayerQuitMessage } from './model';
 import uuid from 'uuid/v4';
 import { Logger } from './logger';
-import readline from 'readline';
+import { CommandProcessor } from './command-processor';
 
 export class GameServer {
     public static readonly PORT: number = 8080;
 
+    private readonly game: Game;
+    private readonly logger: Logger;
+    private readonly processor: CommandProcessor;
+
     private io: SocketIO.Server;
     private port: string | number;
-    private game: Game;
-    private logger: Logger;
-    private readline: readline.Interface;
 
-    constructor(game: Game, logger: Logger) {
+    constructor(game: Game, processor: CommandProcessor, logger: Logger) {
         this.game = game;
         this.logger = logger;
+        this.processor = processor;
+        this.attachCmdProcessor();
         this.configure();
         this.sockets();
         this.listen();
-        this.read();
     }
 
-    private read(): void {
-        this.initReadline();
-        
-        this.readline.on('line', (input) => {
-            this.processCommand(input);
-        });
-    }
-
-    private initReadline(): void {
-        this.readline = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout
-        });
-    }
-
-    private processCommand(input: string): void {
-        const cmd = input.split(' ')[0];
+    private processCommand(cmd: string, cmdValue?: string): void {
         switch (cmd) {
             case '/q':
             case '/quit':
@@ -49,6 +35,10 @@ export class GameServer {
                 this.logger.log('Unknown command.');
                 break;
         }
+    }
+
+    private attachCmdProcessor(): void {
+        this.processor.on('cmd', (cmd, cmdValue) => { this.processCommand(cmd, cmdValue) });
     }
 
     private configure(): void {

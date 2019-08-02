@@ -1,16 +1,17 @@
-import readline from 'readline';
 import { BaseGameClient } from './base-game-client';
 import { ServerConnection } from './server-connection';
+import { CommandProcessor } from './command-processor';
 
 export class TerminalGameClient extends BaseGameClient {
     private myLabel: string = 'Your';
     private opponentLabel: string = 'Opponent\'s';
 
-    private readline: readline.Interface;
+    private readonly processor: CommandProcessor;
 
-    constructor(connection: ServerConnection) {
+    constructor(connection: ServerConnection, processor: CommandProcessor) {
         super(connection);
-        this.read();
+        this.processor = processor;
+        this.processor.on('cmd', (cmd, cmdValue) => { this.processCommand(cmd, cmdValue) });
     }
 
     onDisconnect(): void {
@@ -52,17 +53,7 @@ export class TerminalGameClient extends BaseGameClient {
         console.log(`Game started. Number: ${score}. ${turnMsg} turn.`);
     }    
 
-    private read(): void {
-        this.initReadline();
-        
-        this.readline.on('line', (input) => {
-            this.processCommand(input);
-        });
-    }
-
-    private processCommand(input: string): void {
-        const cmd = input.split(' ')[0];
-        const cmdValue = input.substring(input.indexOf(' ') + 1);
+    private processCommand(cmd: string, cmdValue: string): void {
         switch (cmd) {
             case '/q':
             case '/quit':
@@ -88,12 +79,5 @@ export class TerminalGameClient extends BaseGameClient {
     private isValidMove(input: string): boolean {
         const value = +input;
         return value == -1 || value == 0 || value == 1;
-    }
-
-    private initReadline(): void {
-        this.readline = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout
-        });
     }
 }
