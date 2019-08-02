@@ -30,7 +30,7 @@ export class Game {
         }
 
         if (!this.isFull()) {
-            return this.score;
+            throw new Error('Invalid operation: game does not have enough players.');
         }
 
         this.score += moveBy;
@@ -53,7 +53,9 @@ export class Game {
     }
 
     public enterPlayer(id: string): void {
-        if (this.isFull()) return;
+        if (this.isFull()) {
+            throw new Error('Invalid operation: game is full.');
+        }
         this.players.push(new Player(id));
     }
 
