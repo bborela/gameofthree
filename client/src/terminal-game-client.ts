@@ -3,8 +3,8 @@ import { ServerConnection } from './server-connection';
 import { CommandProcessor } from './command-processor';
 
 export class TerminalGameClient extends BaseGameClient {
-    private myLabel: string = 'Your';
-    private opponentLabel: string = 'Opponent\'s';
+    private readonly myLabel: string = 'Your';
+    private readonly opponentLabel: string = 'Opponent\'s';
 
     private readonly processor: CommandProcessor;
 
