@@ -58,15 +58,15 @@ export class TerminalGameClient extends BaseGameClient {
         this.autoPlayer.play(score);
     }
 
-    onQuit() {
+    onQuit(): void {
         process.exit(0);
     }
 
-    onSay(text: string) {
+    onSay(text: string): void {
         this.say(text);
     }
 
-    onPlay(move: string) {
+    onPlay(move: string): void {
         if (this.autoPlayer.isOn()) {
             console.log('Auto-play is on. Please switch it off to play.');
             return;
@@ -77,7 +77,7 @@ export class TerminalGameClient extends BaseGameClient {
             this.move(parsedValue);
     }
 
-    private attachEvents() {
+    private attachEvents(): void {
         this.processor.on('quit', () => { this.onQuit(); });
         this.processor.on('say', (text) => { this.onSay(text); });
         this.processor.on('play', (move) => { this.onPlay(move); });

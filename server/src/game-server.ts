@@ -74,7 +74,7 @@ export class GameServer {
         this.io.emit('message', message);
     }
 
-    private onMoved(data: any) {
+    private onMoved(data: any): void {
         const message = new MoveMessage(data.movingPlayer.id,
             data.state,
             data.value,
@@ -84,11 +84,11 @@ export class GameServer {
         this.logger.log('Moving');
     }
 
-    private onChat(message: any) {
+    private onChat(message: any): void {
         this.broadcast(message);
     }
 
-    private onMoving(data: any) {
+    private onMoving(data: any): void {
         this.controller.tryMove(data.playerId, data.state, data.value);
     }
 
