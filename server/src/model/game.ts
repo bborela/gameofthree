@@ -1,30 +1,36 @@
-import uuid from 'uuid/v4';
 import { Player } from './player';
 import { Utils } from '../lib/utils';
 import { Randomizer } from '../lib/randomizer';
+import { StateGenerator } from '../lib/state-generator';
 
 export class Game {
     private static readonly LOWEST_NUMBER: number = 50;
     private static readonly HIGHEST_NUMBER : number = 100;
     private static readonly MAX_PLAYERS: number = 2;
-
+    
     private randomizer: Randomizer;
+    private stateGenerator: StateGenerator;
     private players: Player[] = [];
     private score: number;
     private state: string;
     private turn: number;
 
-    constructor(randomizer: Randomizer) {
+    constructor(randomizer: Randomizer, stateGenerator: StateGenerator) {
         this.randomizer = randomizer;
+        this.stateGenerator = stateGenerator;
     }
 
     public start(): void {
+        if (!this.isFull()) {
+            throw new Error('Invalid operation: game does not have enough players.');
+        }
+
         this.score = this.randomizer.random(Game.LOWEST_NUMBER, Game.HIGHEST_NUMBER);
         this.turn = this.randomizer.random(0, Game.MAX_PLAYERS - 1);
         this.updateState();
     }
 
-    public move(moveBy: number): number {
+    public move(moveBy: number, state: string): boolean {
         if (this.isOver()) {
             throw new Error('Invalid operation: game is over.');
         }
@@ -33,15 +39,20 @@ export class Game {
             throw new Error('Invalid operation: game does not have enough players.');
         }
 
+        // just discard move since move ordering is not guaranteed by the deliverer
+        if (!this.isValidState(state)) {
+            return false;
+        }
+
         this.score += moveBy;
         this.score = Utils.toInt(this.score / 3);
         if (this.isOver()) {
-            return this.score;
+            return true;
         }
 
         this.switchTurn();
         this.updateState();
-        return this.score;
+        return true;
     }
 
     public removePlayer(id: string) {
@@ -75,7 +86,7 @@ export class Game {
         return this.score;
     }
 
-    public isValidState(state: string): boolean {
+    private isValidState(state: string): boolean {
         return this.state == state;
     }
 
@@ -85,6 +96,6 @@ export class Game {
     }
 
     private updateState(): void {
-        this.state = uuid();
+        this.state = this.stateGenerator.generate();
     }
 }

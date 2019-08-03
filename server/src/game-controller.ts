@@ -38,13 +38,15 @@ export class GameController extends EventEmitter {
     public tryMove(playerId: string, state: string, value: number): boolean {
         if (!this.game.isFull()
             || this.game.isOver()
-            || !this.isPlayerTurn(playerId)
-            || !this.game.isValidState(state)) {
+            || !this.isPlayerTurn(playerId)) {
             return false;
         }
 
         const movingPlayer = this.game.getCurrentPlayer();
-        this.game.move(value);
+        const moved = this.game.move(value, state);
+        
+        if (!moved) return false;
+
         this.emit('move', {
             movingPlayer,
             value,

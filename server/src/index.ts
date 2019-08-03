@@ -4,9 +4,9 @@ import { Randomizer } from './lib/randomizer';
 import { MessageHandler } from './message-handler';
 import { GameController } from './game-controller';
 import { ServerCommandProcessor } from './server-command-processor';
+import { StateGenerator } from './lib/state-generator';
 
-const randomizer = new Randomizer();
-const game = new Game(randomizer);
+const game = new Game(new Randomizer(), new StateGenerator());
 const logger = {
     log: (message: any, args?: any[]) => args ? console.log(message, args) : console.log(message)
 };
