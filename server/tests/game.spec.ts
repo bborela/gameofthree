@@ -133,8 +133,9 @@ describe('Game', () => {
     });
 
     it('when try to move in game that is full', () => {
+      const initialScore = 10;
       const sut = new GameBuilder()
-        .withRandomizer((min, max) => max > 1 ? 10 : 1)
+        .withRandomizer((_min, max) => max > 1 ? initialScore : 1)
         .withStates()
         .withPlayer('randomId1')
         .withPlayer('randomId2')
