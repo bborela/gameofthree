@@ -1,4 +1,4 @@
-import { CommandProcessor } from "./lib/command-processor";
+import { CommandProcessor } from "./lib";
 
 export class ServerCommandProcessor extends CommandProcessor {
     processCommand(cmd: string, _cmdValue?: string): void {

@@ -1,7 +1,5 @@
 import { Player } from './player';
-import { Utils } from '../lib/utils';
-import { Randomizer } from '../lib/randomizer';
-import { StateGenerator } from '../lib/state-generator';
+import { Utils, Randomizer, StateGenerator } from '../lib';
 
 export class Game {
     private static readonly LOWEST_NUMBER: number = 50;

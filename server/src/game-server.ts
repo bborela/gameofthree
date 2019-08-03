@@ -1,8 +1,8 @@
 import socketIo from 'socket.io';
 import { StartMessage, Message, MoveMessage, IdMessage, PlayerQuitMessage } from './model';
 import uuid from 'uuid/v4';
-import { Logger } from './lib/logger';
-import { CommandProcessor } from './lib/command-processor';
+import { Logger } from './lib';
+import { CommandProcessor } from './lib';
 import { GameController } from './game-controller';
 import { MessageHandler } from './message-handler';
 const messages = require('./messages.json');

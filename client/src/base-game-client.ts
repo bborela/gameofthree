@@ -1,5 +1,5 @@
-import { ServerConnection } from './lib/server-connection';
-import { MessageTypes } from './message-types';
+import { ServerConnection } from './lib';
+import { MessageTypes } from './model';
 
 export abstract class BaseGameClient {
     private connection: ServerConnection;

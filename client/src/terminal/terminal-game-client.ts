@@ -1,8 +1,7 @@
-import { BaseGameClient } from './base-game-client';
-import { ServerConnection } from './lib/server-connection';
-import { CommandProcessor } from './lib/command-processor';
-import { AutoPlayer } from './auto-player';
-const messages = require('./messages.json');
+import { BaseGameClient } from '../base-game-client';
+import { ServerConnection, CommandProcessor } from '../lib';
+import { AutoPlayer } from '../auto-player';
+const messages = require('../messages.json');
 
 export class TerminalGameClient extends BaseGameClient {
     private readonly processor: CommandProcessor;
@@ -40,7 +39,7 @@ export class TerminalGameClient extends BaseGameClient {
             : `${isMyMove ? messages.win : messages.lose}\n`;
         console.log(`${mover} move: ${movedBy}. Result: ${result}. ${additionalMsg}`);
 
-        if (!isFinished) {
+        if (!isFinished && !isMyMove) {
             this.autoPlayer.play(result);
         }
     }
@@ -54,7 +53,9 @@ export class TerminalGameClient extends BaseGameClient {
         const turnMsg = isMyTurn ? messages.me : messages.opponent;
         console.log(`\n${messages.gameStarted}. Number: ${score}. ${turnMsg} turn.`);
         
-        this.autoPlayer.play(score);
+        if (isMyTurn) {
+            this.autoPlayer.play(score);
+        }
     }
 
     onQuit(): void {

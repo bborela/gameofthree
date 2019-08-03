@@ -17,9 +17,9 @@ export class AutoPlayer extends EventEmitter {
         if (!this.isOn()) {
             return;
         }
-
+        console.log(`Will delay by ${this.delay} ${new Date().toISOString()}`);
         this.delayedPlay = setTimeout(
-            () => this.emit('play', AutoPlayerCalculator.calculate(score)),
+            () => { this.emit('play', AutoPlayerCalculator.calculate(score)); console.log(new Date().toISOString()) },
             +this.delay);
     }
 
