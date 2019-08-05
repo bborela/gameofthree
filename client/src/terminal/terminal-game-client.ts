@@ -92,12 +92,15 @@ export class TerminalGameClient extends BaseGameClient {
     }
 
     private parseMove(input: string): number {
-        return input == '-'
-            ? -1
-            : input == '0'
-                ? 0
-                : input == '+'
-                    ? 1
-                    : null;
+        switch (input) {
+            case '-':
+                return -1;
+            case '0':
+                return 0;
+            case '+':
+                return 1;
+            default:
+                return null;
+        }
     }
 }
